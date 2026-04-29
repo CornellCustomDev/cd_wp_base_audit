@@ -295,12 +295,38 @@
       .item-title { min-width: 0; width: 100%; }
     }
 
+    .comments-section {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+    }
+    .comments-toggle {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .comments-toggle:hover { background: var(--bg); }
+    .comments-toggle .chevron {
+      display: inline-block;
+      transition: transform 0.15s;
+      font-weight: bold;
+    }
+    .comments-toggle[aria-expanded="true"] .chevron { transform: rotate(90deg); }
+    .giscus-thread { margin-top: 1rem; }
+    .giscus-thread[hidden] { display: none; }
+
     @media print {
       .filter-bar { position: static; box-shadow: none; }
       .item { break-inside: avoid; page-break-inside: avoid; box-shadow: none; }
       .item:hover { transform: none; box-shadow: none; }
       body { background: white; }
       .hidden { display: none !important; }
+      .comments-section { display: none; }
     }
   </style>
 </head>
@@ -1866,10 +1892,72 @@
     document.getElementById('no-results').classList.toggle('hidden', visible > 0);
   }
 
+  const GISCUS = {
+    repo: 'CornellCustomDev/cd_wp_base_audit',
+    repoId: 'R_kgDOSQCB6Q',
+    category: 'Audit Comments',
+    categoryId: 'DIC_kwDOSQCB6c4C7-Xk'
+  };
+
+  function attachComments() {
+    document.querySelectorAll('.item').forEach(item => {
+      const idEl = item.querySelector('.item-id');
+      const body = item.querySelector('.item-body');
+      if (!idEl || !body) return;
+      const id = idEl.textContent.trim();
+
+      const wrap = document.createElement('div');
+      wrap.className = 'comments-section';
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'comments-toggle';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.innerHTML = '<span class="chevron">\u203A</span> \uD83D\uDCAC Comments';
+
+      const thread = document.createElement('div');
+      thread.className = 'giscus-thread';
+      thread.hidden = true;
+      thread.dataset.term = id;
+
+      btn.addEventListener('click', () => {
+        const isOpen = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!isOpen));
+        thread.hidden = isOpen;
+        if (!isOpen && !thread.dataset.loaded) {
+          thread.dataset.loaded = 'true';
+          const s = document.createElement('script');
+          s.src = 'https://giscus.app/client.js';
+          s.setAttribute('data-repo', GISCUS.repo);
+          s.setAttribute('data-repo-id', GISCUS.repoId);
+          s.setAttribute('data-category', GISCUS.category);
+          s.setAttribute('data-category-id', GISCUS.categoryId);
+          s.setAttribute('data-mapping', 'specific');
+          s.setAttribute('data-term', id);
+          s.setAttribute('data-strict', '0');
+          s.setAttribute('data-reactions-enabled', '1');
+          s.setAttribute('data-emit-metadata', '0');
+          s.setAttribute('data-input-position', 'top');
+          s.setAttribute('data-theme', 'preferred_color_scheme');
+          s.setAttribute('data-lang', 'en');
+          s.setAttribute('data-loading', 'lazy');
+          s.crossOrigin = 'anonymous';
+          s.async = true;
+          thread.appendChild(s);
+        }
+      });
+
+      wrap.appendChild(btn);
+      wrap.appendChild(thread);
+      body.appendChild(wrap);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('total-count').textContent = document.querySelectorAll('.item').length;
     renderFilters();
     applyFilters();
+    attachComments();
 
     document.getElementById('search').addEventListener('input', e => {
       searchQuery = e.target.value;
