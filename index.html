@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CD WP Base + Post-Type Plugins — Audit & Improvement Inventory</title>
+  <style>
+    :root {
+      --bug: #d73a49;
+      --improve: #0366d6;
+      --filter: #6f42c1;
+      --debt: #e36209;
+      --observation: #b08800;
+      --text: #24292e;
+      --muted: #586069;
+      --border: #e1e4e8;
+      --bg: #f6f8fa;
+      --card: #ffffff;
+      --base: #1f6feb;
+      --news: #2da44e;
+      --events: #bf3989;
+      --people: #8957e5;
+      --cross: #6e7781;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      margin: 0;
+      padding: 2rem 1.5rem;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 { margin: 0 0 0.25rem; font-size: 1.75rem; }
+    .subtitle { color: var(--muted); margin: 0 0 1.5rem; font-size: 0.9rem; }
+
+    .filter-bar {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      position: sticky;
+      top: 0.5rem;
+      z-index: 10;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .filter-bar h3 {
+      margin: 0 0 0.5rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .filter-row {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .filter-row:last-of-type { margin-bottom: 0; }
+    .filter-btn {
+      border: 1px solid var(--border);
+      background: var(--card);
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.15s;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .filter-btn:hover { border-color: #999; }
+    .filter-btn .count-pill {
+      background: #eef0f3;
+      color: var(--muted);
+      padding: 0.05rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      min-width: 1.25rem;
+      text-align: center;
+    }
+    .filter-btn.active { color: white; border-color: transparent; }
+    .filter-btn.active .count-pill { background: rgba(255,255,255,0.28); color: white; }
+    .filter-btn.active[data-tag="BUG"] { background: var(--bug); }
+    .filter-btn.active[data-tag="IMPROVE"] { background: var(--improve); }
+    .filter-btn.active[data-tag="FILTER"] { background: var(--filter); }
+    .filter-btn.active[data-tag="DEBT"] { background: var(--debt); }
+    .filter-btn.active[data-tag="OBSERVATION"] { background: var(--observation); }
+    .filter-btn.active[data-section] { background: var(--text); }
+
+    .scope-tab {
+      border: 1px solid var(--border);
+      background: var(--card);
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      transition: all 0.15s;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .scope-tab:hover { border-color: #999; }
+    .scope-tab .count-pill {
+      background: #eef0f3;
+      color: var(--muted);
+      padding: 0.05rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      min-width: 1.25rem;
+      text-align: center;
+    }
+    .scope-tab.active { color: white; border-color: transparent; }
+    .scope-tab.active .count-pill { background: rgba(255,255,255,0.28); color: white; }
+    .scope-tab.active[data-scope="all"] { background: var(--text); }
+    .scope-tab.active[data-scope="base"] { background: var(--base); }
+    .scope-tab.active[data-scope="news"] { background: var(--news); }
+    .scope-tab.active[data-scope="events"] { background: var(--events); }
+    .scope-tab.active[data-scope="people"] { background: var(--people); }
+    .scope-tab.active[data-scope="cross"] { background: var(--cross); }
+
+    .search-input {
+      width: 100%;
+      padding: 0.55rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: var(--bg);
+      margin-top: 0.5rem;
+    }
+    .search-input:focus { outline: 2px solid var(--improve); outline-offset: -1px; }
+
+    .stats {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .reset-btn {
+      background: none;
+      border: none;
+      color: var(--improve);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.4rem;
+    }
+    .reset-btn:hover { text-decoration: underline; }
+
+    .item {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      border: 1px solid var(--border);
+      border-left-width: 4px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .item:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+    .item[data-primary="BUG"] { border-left-color: var(--bug); }
+    .item[data-primary="IMPROVE"] { border-left-color: var(--improve); }
+    .item[data-primary="FILTER"] { border-left-color: var(--filter); }
+    .item[data-primary="DEBT"] { border-left-color: var(--debt); }
+    .item[data-primary="OBSERVATION"] { border-left-color: var(--observation); }
+
+    .item-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+    .item-id {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--bg);
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+    .scope-pill {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.7rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+      color: white;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .scope-pill[data-scope="base"] { background: var(--base); }
+    .scope-pill[data-scope="news"] { background: var(--news); }
+    .scope-pill[data-scope="events"] { background: var(--events); }
+    .scope-pill[data-scope="people"] { background: var(--people); }
+    .scope-pill[data-scope="cross"] { background: var(--cross); }
+    .section-pill {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      padding: 0.15rem 0.4rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.18rem 0.5rem;
+      border-radius: 3px;
+      color: white;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .tag.BUG { background: var(--bug); }
+    .tag.IMPROVE { background: var(--improve); }
+    .tag.FILTER { background: var(--filter); }
+    .tag.DEBT { background: var(--debt); }
+    .tag.OBSERVATION { background: var(--observation); }
+
+    .item-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text);
+      flex: 1;
+      min-width: 14rem;
+      line-height: 1.35;
+    }
+    .item-body {
+      color: #3f4b58;
+      font-size: 0.875rem;
+      line-height: 1.55;
+    }
+    .plain {
+      background: #f6f8fa;
+      border-left: 3px solid #d0d7de;
+      padding: 0.55rem 0.8rem;
+      margin: 0 0 0.75rem 0;
+      color: #2a3138;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      border-radius: 0 4px 4px 0;
+    }
+    .plain strong:first-child {
+      color: var(--muted);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+    .item-body ul { padding-left: 1.1rem; margin: 0.2rem 0; }
+    .item-body li { margin: 0.2rem 0; }
+    .item-body code {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      background: var(--bg);
+      padding: 0.05rem 0.35rem;
+      border-radius: 3px;
+      font-size: 0.85em;
+      color: #24292e;
+    }
+    .item-body strong { color: var(--text); font-weight: 600; }
+
+    .hidden { display: none !important; }
+    .no-results {
+      text-align: center;
+      color: var(--muted);
+      padding: 3rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 1rem 0.75rem; }
+      .filter-bar { top: 0; border-radius: 0; padding: 0.75rem; margin: -1rem -0.75rem 1rem; }
+      .item-title { min-width: 0; width: 100%; }
+    }
+
+    @media print {
+      .filter-bar { position: static; box-shadow: none; }
+      .item { break-inside: avoid; page-break-inside: avoid; box-shadow: none; }
+      .item:hover { transform: none; box-shadow: none; }
+      body { background: white; }
+      .hidden { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CD WP Base + Post-Type Plugins — Audit &amp; Improvement Inventory</h1>
+  <div class="subtitle">Generated 2026-04-29. Audit of <code>cd-wp-base</code> v1.6.0 and the three associated post-type plugins (<code>cd-news</code>, <code>cd-events</code>, <code>cd-people</code>) at their current main-branch HEAD. Each item has a plain-English summary up front and technical details below. Use the scope tabs to focus on one codebase at a time.</div>
+
+  <div class="filter-bar">
+    <h3>Scope</h3>
+    <div class="filter-row" id="scope-tabs"></div>
+    <h3>Filter by type</h3>
+    <div class="filter-row" id="tag-filters"></div>
+    <h3>Filter by section</h3>
+    <div class="filter-row" id="section-filters"></div>
+    <input type="search" class="search-input" id="search" placeholder="Search titles and details&hellip;" autocomplete="off">
+    <div class="stats">
+      <span><strong id="visible-count">0</strong> of <span id="total-count">0</span> items shown</span>
+      <span>
+        <button class="reset-btn" id="print-btn">Print view</button>
+        &middot;
+        <button class="reset-btn" id="reset-btn">Clear all filters</button>
+      </span>
+    </div>
+  </div>
+
+  <div id="items">
+
+    <!-- ========================= BASE THEME ========================= -->
+
+    <!-- A · Bugs -->
+
+    <article class="item" data-scope="base" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-A1</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title"><code>cd/tabs</code> block crashes on PHP 8 with <code>count(null)</code> TypeError when no tabs configured</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The Tabbed Content block crashes the page it&rsquo;s on (fatal PHP error) the moment an editor adds the block to a page, because it tries to count tabs before any have been added.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/blocks/tabs/tabs.php:3</code></li>
+          <li><strong>Cause:</strong> <code>count(get_field('content_tabs'))</code> with no <code>is_array()</code> check. <code>get_field()</code> returns <code>null</code> on an unconfigured repeater.</li>
+          <li><strong>Fix:</strong> Guard with <code>is_array()</code> before counting, or coerce to <code>(array)</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-A2</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Breadcrumb block only walks the page-ancestor tree; renders nothing on singles, taxonomies, and archives</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The breadcrumb trail only works on regular pages with a parent-child structure. On single posts of any custom post type, on category/tag pages, or on archive listings, the trail shows nothing useful &mdash; it doesn&rsquo;t recognize those contexts.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/templates/blocks/breadcrumb/breadcrumb.php:2</code></li>
+          <li><strong>Cause:</strong> Walks only <code>get_post_ancestors(get_the_ID())</code>. No branches for <code>is_singular()</code>, <code>is_tax()</code>, <code>is_category()</code>, <code>is_tag()</code>, or <code>is_post_type_archive()</code>.</li>
+          <li><strong>Fix:</strong> Add explicit handling for each context. Pair with a configurable post-type&nbsp;&rarr;&nbsp;parent-page mapping (see BASE-C2) so the trail can place a single news article under, say, the &ldquo;News&rdquo; page.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-A3</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Title block renders nothing on taxonomy and post-type-archive pages</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The page-title block knows how to say &ldquo;About Us&rdquo; on a regular page but doesn&rsquo;t know what to say on a category page, tag page, or post-type archive &mdash; so those pages show a blank title.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/templates/blocks/title/title.php</code></li>
+          <li><strong>Cause:</strong> Branches only handle <code>is_page()</code>, <code>is_single()</code>, <code>is_search()</code>, <code>is_404()</code>, plus FSE editor placeholders.</li>
+          <li><strong>Fix:</strong> Add <code>single_term_title()</code>, <code>post_type_archive_title()</code>, and <code>the_archive_title()</code> branches.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-A4</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Section nav uses <code>get_the_ID()</code>, returning 0 on non-page queries &mdash; nav disappears on singles &amp; tax pages</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The sidebar section navigation is built around the current page&rsquo;s ID. On single posts of a custom post type or on taxonomy pages, that ID comes back as zero, so the nav silently produces nothing.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/section-nav.php:9</code> (<code>$current_page_id = get_the_ID();</code>)</li>
+          <li><strong>Symptom:</strong> Section nav shows on pages but vanishes on singles, taxonomy archives, and post-type archives.</li>
+          <li><strong>Fix:</strong> When the current context isn&rsquo;t a page, map back to a configured parent page via the missing post-type&nbsp;&rarr;&nbsp;parent-page mechanism (BASE-C2).</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-A5</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Sidebar block templates ship &ldquo;Mussum Ipsum&rdquo; lorem text by default</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The default content of the top and bottom sidebar template parts is novelty lorem-ipsum joke text. Any editor who forgets to clear the placeholder before saving will publish gibberish to the live site.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/parts/sidebar-top.html</code>, <code>cd-wp-base/parts/sidebar-bottom.html</code>, and the same lorem hardcoded at <code>cd-wp-base/templates/blocks/sidebar-top/sidebar-top.php:18</code> &amp; <code>sidebar-bottom.php:18</code>.</li>
+          <li><strong>Fix:</strong> Replace with neutral placeholder text or empty <code>InnerBlocks</code> templates. If a fallback is desired, document it.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-A6</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Manual Card block uses ACF&rsquo;s <code>mode: preview</code>, requiring click-through to edit each field</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> To edit anything on a Manual Card, the editor has to first click into the block before any field becomes editable &mdash; an extra step on every interaction.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/blocks/manual-card/block.json:17</code> (<code>"mode": "preview"</code>)</li>
+          <li><strong>Fix:</strong> Switch to <code>"mode": "auto"</code> (matches the Aside block&rsquo;s configuration) OR expose a filter to toggle.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-A7</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Tabbed Content floats leak past tab boundaries and wrap subsequent blocks</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> If a tab contains a floated element (an image hugging one side, for instance), the float spills out below the tabs and disturbs whatever block follows.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/blocks/tabs/tabs.php</code> markup &amp; <code>.ui-tabs .tab-inner</code> styling.</li>
+          <li><strong>Fix:</strong> Apply <code>display: flow-root</code> on <code>.ui-tabs .tab-inner</code> to contain floats inside each panel.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="A" data-tags="DEBT" data-primary="DEBT">
+      <div class="item-header">
+        <span class="item-id">BASE-A8</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">Stray <code>error_log()</code> debug statement left in <code>accordion.php</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> A debug log line was left in the Accordion block&rsquo;s render template. Every accordion render writes the JSON-encoded default-blocks array to the PHP error log, polluting logs and adding (small) overhead.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/blocks/accordion/accordion.php:9</code> &mdash; <code>error_log($accordion_default_blocks);</code></li>
+          <li><strong>Fix:</strong> Remove the line.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- B · Editor & admin CSS issues -->
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B1</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title"><code>base.css</code> leaks into the WordPress admin via <code>enqueue_block_assets</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The theme&rsquo;s front-end stylesheet (a large CSS file with broad selectors on <code>body</code>, <code>h2</code>, form inputs, etc.) is enqueued through a hook that fires on both the front end and the admin. The admin UI inherits front-end rules it was never designed for &mdash; metabox headers, form fields, and buttons all become visually broken.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/styles-and-scripts.php:10</code> &mdash; <code>add_action('enqueue_block_assets', 'cd_wp_base_enqueue_cds_required')</code> enqueues <code>assets/cds/css/base.css</code> for both contexts.</li>
+          <li><strong>Fix:</strong> Use <code>wp_enqueue_scripts</code> for front-end assets and <code>enqueue_block_editor_assets</code> for editor-iframe styles. Reserve <code>enqueue_block_assets</code> for genuinely shared block CSS.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B2</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title"><code>base.css</code> blanket <code>width:100%; max-width:100%</code> blocks Wide and Full alignment</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> WordPress&rsquo;s &ldquo;Wide&rdquo; and &ldquo;Full&rdquo; alignment options let blocks visually break out of the main content column. A blanket width rule in the theme&rsquo;s base CSS prevents any block from ever exceeding its container, so those alignment options silently do nothing.</p>
+        <ul>
+          <li><strong>Symptom:</strong> <code>.alignwide</code> / <code>.alignfull</code> have no effect on block width.</li>
+          <li><strong>Fix:</strong> Remove the unscoped width rule from <code>base.css</code>, or scope it to non-Gutenberg contexts using <code>:not(.is-layout-constrained &gt; *)</code> or class-based exclusions.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B3</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Core <code>.wp-block-post-featured-image:where(.alignright){width:100%}</code> defeats float layout</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> When an editor sets a featured image to float right beside text, WordPress core&rsquo;s own stylesheet (loaded after the theme&rsquo;s) forces the image to 100% width &mdash; so the float does nothing and the image takes the entire column.</p>
+        <ul>
+          <li><strong>Cause:</strong> Core&rsquo;s low-specificity <code>:where()</code> rule beats the theme&rsquo;s, then is itself overridden by core&rsquo;s alignment normalizers.</li>
+          <li><strong>Fix:</strong> Theme should emit a higher-specificity rule preserving image floats, or unregister the core block style and provide its own.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B4</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Aside block&rsquo;s editor wrapper uses <code>display: contents</code>, neutralizing float and width settings</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The Aside block has settings for width and floating so it can sit alongside body text. In &ldquo;Show Template&rdquo; mode the wrapper is made invisible to layout via <code>display: contents</code>, which means the Aside&rsquo;s float and width settings have no effect on positioning.</p>
+        <ul>
+          <li><strong>Cause:</strong> <code>cd-wp-base/assets/cds/sass/utility/_cms.scss</code> applies <code>display: contents</code> to every <code>.block-editor-block-list__block</code> inside <code>.region-sidebar</code>.</li>
+          <li><strong>Fix:</strong> Target the inner <code>&lt;aside&gt;</code> element directly rather than the editor wrapper, or scope the rule to specific block types only.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B5</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title"><code>core/spacer</code> height collapses (or balloons) inside the editor in Show Template mode</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The Spacer block (used to add vertical gap between blocks) renders incorrectly inside the editor &mdash; either compressing to zero or expanding to thousands of pixels &mdash; depending on context, because Gutenberg&rsquo;s <code>height: 100%</code> resolves against an unmeasured parent.</p>
+        <ul>
+          <li><strong>Cause:</strong> Gutenberg&rsquo;s <code>.block-library-spacer__resize-container:not(.is-resizing){ height: 100% !important }</code> meets a parent with no defined height.</li>
+          <li><strong>Fix:</strong> Theme&rsquo;s <code>editor.scss</code> should ensure the spacer&rsquo;s outer wrapper preserves its inline height attribute. May also warrant a Gutenberg core ticket.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B6</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Editor&rsquo;s <code>.page-template-*</code> body class isn&rsquo;t carried into the Gutenberg iframe</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The theme registers editor styles like &ldquo;on pages using the Full-Bleed template, do X.&rdquo; Modern Gutenberg loads the editor canvas inside an iframe whose <code>&lt;body&gt;</code> doesn&rsquo;t inherit the page-template body class &mdash; so those template-specific editor styles never apply.</p>
+        <ul>
+          <li><strong>Where:</strong> Body classes are added at <code>cd-wp-base/functions/editor-functions.php</code> (<code>cd_wp_base_editor_body_class</code>) but only on the outer admin shell, not the editor iframe.</li>
+          <li><strong>Fix:</strong> Either inject the body class into the editor iframe via JS, or rewrite the affected selectors to match what&rsquo;s actually present in the iframe DOM.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B7</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Editor wide alignment is hardcoded to 886px instead of <code>theme.json</code> <code>wideSize</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> In the block editor, anything set to &ldquo;Wide&rdquo; alignment is capped at a magic 886&nbsp;pixel value defined in the editor stylesheet. The cap should be sourced from <code>theme.json</code> so it matches the front end and adapts to project-level overrides.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/assets/sass/editor.scss</code> hardcodes 886px.</li>
+          <li><strong>Fix:</strong> Drive the value from <code>settings.layout.wideSize</code> in <code>theme.json</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B8</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Full-bleed and no-sidebar templates appear constrained in the editor due to Gutenberg constrained-layout defaults</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Templates designed to be edge-to-edge (no sidebar, full browser width) still look like they have a narrow centered column inside the editor because Gutenberg&rsquo;s default constrained-layout squeezes them. WYSIWYG breaks down for those templates.</p>
+        <ul>
+          <li><strong>Fix:</strong> Emit editor-side overrides keyed off the Full-Bleed body class (see BASE-B6) so templates that declare full-bleed actually render full-bleed in the editor too.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B9</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Core separator block styles override theme HR styles like <code>accent1</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The theme defines branded horizontal-line styles (Blue-Green, Cornell Icon, Flourish, etc.). When an editor picks one, WordPress&rsquo;s core separator styles win the cascade, so the picked style doesn&rsquo;t appear.</p>
+        <ul>
+          <li><strong>Cause:</strong> Core classes <code>.wp-block-separator</code> and <code>.has-alpha-channel-opacity</code> outweigh the theme&rsquo;s plain <code>hr.accent1</code>, etc.</li>
+          <li><strong>Fix:</strong> Unregister core&rsquo;s separator block styles and re-register the theme&rsquo;s own set, or raise specificity on the theme&rsquo;s rules.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B10</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">ACF radio &amp; checkbox inputs are blanked out in the admin by <code>base.css</code> stripping native appearance</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Radio buttons and checkboxes inside ACF fields appear empty in admin (the user can&rsquo;t tell which is selected) because front-end styles set <code>appearance: none</code> with a custom SVG background that doesn&rsquo;t apply correctly in admin.</p>
+        <ul>
+          <li><strong>Cause:</strong> Symptom of BASE-B1 (front-end CSS leaking into admin).</li>
+          <li><strong>Fix:</strong> Scope <code>appearance: none</code> / SVG-background styling to front-end-only contexts.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B11</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">ACF select dropdowns are mis-styled in admin by front-end select styling</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> ACF dropdown menus look broken in admin for the same root cause as BASE-B10 &mdash; front-end select styling leaks into admin contexts.</p>
+        <ul>
+          <li><strong>Fix:</strong> Scope select-element styling in <code>base.css</code> to front-end only.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B12</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Aside block&rsquo;s alignment field includes a &ldquo;Full-width&rdquo; choice that visibly breaks layout</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The Aside block&rsquo;s alignment dropdown offers a &ldquo;Full-width&rdquo; option, but selecting it produces broken visual output. The choice should either be removed or its render path fixed.</p>
+        <ul>
+          <li><strong>Where:</strong> ACF field for the Aside block&rsquo;s alignment (in <code>cd-wp-base/blocks/custom-fields/aside-block.json</code>).</li>
+          <li><strong>Fix:</strong> Remove the broken choice from the field options, or fix the render path so the option works as labeled.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">BASE-B13</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Block editor panels show duplicate ACF field descriptions in repeater fields</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> In editor side panels for blocks that include ACF repeater fields, each field&rsquo;s help text is displayed twice.</p>
+        <ul>
+          <li><strong>Fix:</strong> Investigate whether the duplicate originates in theme markup or in the ACF / ACF Extended UI; file an upstream report if it&rsquo;s in ACF.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="B" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">BASE-B14</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title"><code>.wp-block-cd-content-section</code> and <code>.wp-block-cd-card-container</code> apply editor width constraints by default</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Two of the theme&rsquo;s container blocks impose a narrow editor width that doesn&rsquo;t reflect the block&rsquo;s actual front-end behavior. The constraint is on by default and isn&rsquo;t exposed as a configurable option.</p>
+        <ul>
+          <li><strong>Fix:</strong> Make the editor-width behavior opt-in via a block attribute or block style, or remove the default constraint entirely.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- C · Architecture & extensibility -->
+
+    <article class="item" data-scope="base" data-section="C" data-tags="FILTER" data-primary="FILTER">
+      <div class="item-header">
+        <span class="item-id">BASE-C1</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag FILTER">FILTER</span>
+        <span class="item-title">&ldquo;Disable Posts&rdquo; behavior is a stack of <code>function_exists()</code> guards instead of an opt-out filter</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The theme turns off WordPress&rsquo;s built-in Posts feature by default. The only way to keep Posts on a project that wants them is to pre-define empty versions of the theme&rsquo;s helper functions so they never run &mdash; a brittle workaround. A simple opt-in filter would replace the function-shadowing pattern.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/disable-posts-comments.php</code> &mdash; every helper is wrapped in <code>if (!function_exists(...))</code>.</li>
+          <li><strong>Fix:</strong> Expose <code>cd_wp_base_disable_posts</code> (default <code>true</code>) and gate the action/filter registrations on it, so projects can opt out without function-shadowing.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="C" data-tags="FILTER IMPROVE" data-primary="FILTER">
+      <div class="item-header">
+        <span class="item-id">BASE-C2</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag FILTER">FILTER</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">No first-class concept of &ldquo;post type&nbsp;&rarr;&nbsp;parent page&rdquo; mapping</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Most sites want to treat custom post type singles as logical children of a real page (e.g., &ldquo;a news article belongs under the News page&rdquo;) so that breadcrumbs, the active main-nav highlight, and the section nav all behave intuitively. WordPress doesn&rsquo;t have this concept built in, and the theme doesn&rsquo;t add one. As a result, the breadcrumb (BASE-A2), title (BASE-A3), and section nav (BASE-A4) bugs don&rsquo;t have a clean fix path.</p>
+        <ul>
+          <li><strong>Fix:</strong> Add an Archive Settings field group that maps each public post type and taxonomy to a parent page. Feed that mapping into the breadcrumb, title, and section-nav blocks. Filter <code>nav_menu_css_class</code> so the parent page&rsquo;s nav item gets <code>current-menu-ancestor</code> when on a related single.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="C" data-tags="FILTER" data-primary="FILTER">
+      <div class="item-header">
+        <span class="item-id">BASE-C3</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag FILTER">FILTER</span>
+        <span class="item-title">Site Owner FSE access uses a hardcoded inline <code>MutationObserver</code> with no extension point</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> &ldquo;Site Owner&rdquo; is a restricted role. The theme controls what they can see in the Full Site Editor with a chunk of inline JavaScript that hides nav items and patterns by string match. There&rsquo;s no way to add or remove items from the hide list without forking the whole action.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/user-roles.php:172&ndash;234</code> (<code>cd_wp_base_customize_template_pattern_edit_page_per_users</code>) &mdash; arrays of <code>hiddenNavItems</code> and <code>hiddenPatterns</code> are baked into the inline script.</li>
+          <li><strong>Fix:</strong> Expose filters such as <code>cd_wp_base_site_owner_hidden_nav_items</code> and <code>cd_wp_base_site_owner_hidden_patterns</code>, and pass the resulting arrays into the inline script via <code>wp_localize_script</code> or <code>wp_add_inline_script</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="C" data-tags="FILTER" data-primary="FILTER">
+      <div class="item-header">
+        <span class="item-id">BASE-C4</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag FILTER">FILTER</span>
+        <span class="item-title"><code>cd_normalized_card_defaults</code> filter only supports a single taxonomy per card</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Card grids can show small &ldquo;tag&rdquo; chips on each card sourced from a taxonomy. The current data flow accepts only one taxonomy. Showing tags from multiple taxonomies on the same card requires either side-channel globals or forking the resolution path.</p>
+        <ul>
+          <li><strong>Fix:</strong> Accept an array of taxonomy slugs as the canonical card-tags input, with the existing string form maintained as a backward-compat path.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="C" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-C5</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Allowed-blocks list includes <code>core/freeform</code> (Classic) and <code>core/nextpage</code> (Page Break) by default</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Most modern sites don&rsquo;t want the legacy Classic block or the Page Break block in the inserter. The theme leaves both enabled by default. The default should arguably flip, with an opt-in path for sites that need them.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/block-functions.php:72</code> &amp; <code>:79</code> (<code>core/freeform</code>, <code>core/nextpage</code>).</li>
+          <li><strong>Tension:</strong> The theme actively invests in supporting Classic-block content (TinyMCE button rows, format dropdown, plugin loader at <code>editor-functions.php:413&ndash;476</code>). Decision: continue first-classing Classic, or treat it as a deprecation path?</li>
+          <li><strong>Fix:</strong> Default to excluding the two blocks; expose a filter to add them back when needed.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="C" data-tags="FILTER IMPROVE" data-primary="FILTER">
+      <div class="item-header">
+        <span class="item-id">BASE-C6</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag FILTER">FILTER</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Wholesale dequeue of <code>global-styles</code> on the front end loses Gutenberg layout-support rules</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> WordPress generates a &ldquo;global styles&rdquo; stylesheet that includes (among other things) the layout-support rules that make Row, Stack, and Grid variants of the Group block work. The theme dequeues this stylesheet wholesale on the front end &mdash; presumably to avoid a few specific conflicts &mdash; and unintentionally throws out those layout rules.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/templating-functions.php:479</code> &mdash; <code>wp_dequeue_style('global-styles');</code></li>
+          <li><strong>Symptom:</strong> <code>.is-layout-flex</code>, <code>.is-layout-grid</code>, and similar selectors disappear; Row/Stack/Grid variants of Group don&rsquo;t lay out as expected on the front end.</li>
+          <li><strong>Fix:</strong> Don&rsquo;t dequeue <code>global-styles</code>. Instead, emit higher-specificity overrides for the parts that conflict with the theme&rsquo;s own CSS.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="C" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">BASE-C7</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">No documented helper for child themes to register block categories</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The theme registers its own block categories (<code>cd-general</code>, <code>cd-full-bleed</code>, <code>cd-templates</code>) via <code>block_categories_all</code>. A child theme can use the same WP filter, but there&rsquo;s no documented helper or canonical pattern, so projects often re-discover priorities and the <code>array_unshift</code>/<code>array_merge</code> dance.</p>
+        <ul>
+          <li><strong>Fix:</strong> Either expose a helper like <code>cd_wp_base_register_block_category()</code> or document the recommended priority and merge approach in <code>CONTRIBUTING.md</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="C" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">BASE-C8</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">Card-container backend loader has its <code>has_block</code> guard commented out</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The function that loads the card-container helpers in admin has its &ldquo;only load when needed&rdquo; check disabled, so the helpers are always loaded for every admin request even on screens that don&rsquo;t use the block. Probably a leftover from debugging.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/block-functions.php:53&ndash;58</code> &mdash; the <code>if ($post && has_block('cd/card-container', $post))</code> guard is commented out.</li>
+          <li><strong>Fix:</strong> Decide whether the guard is correct (and re-enable it) or whether it was disabled intentionally (and remove the dead comments).</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- D · Missing or inadequate features -->
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE BUG" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D1</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Banner images use <code>wp_get_attachment_image_url()</code> with size <code>large</code> &mdash; no srcset, no high-DPI</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Page banners load only the 1024-pixel version of the image, with no high-resolution alternates. On Retina/4K screens they look fuzzy. There&rsquo;s no <code>srcset</code>, so browsers can&rsquo;t pick a sharper variant.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/templating-functions.php:178</code> &mdash; <code>wp_get_attachment_image_url($banner_image, 'large')</code></li>
+          <li><strong>Fix:</strong> Register dedicated 2:1 banner image sizes (e.g., <code>cd-header-sm/md/lg</code>), use <code>wp_get_attachment_image()</code> with a <code>sizes</code> attribute so WordPress emits srcset, and use the largest registered size as the base URL.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D2</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">No automatic WebP conversion on upload</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Modern best practice is to serve images as WebP by default for substantial file-size savings. The theme has no built-in conversion path; uploads stay in their original format.</p>
+        <ul>
+          <li><strong>Fix:</strong> Add an upload filter that uses <code>imagewebp()</code> (GD) or Imagick to convert PNG/JPG uploads to WebP at a configurable quality level. Expose <code>cd_wp_base_webp_quality</code> (default ~80) and <code>cd_wp_base_webp_skip_post_types</code> filters.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D3</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Card grids have no native &ldquo;View All&rdquo; button</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> A card grid (e.g., &ldquo;Latest News&rdquo; with three cards) usually wants a &ldquo;View All&rdquo; link to the full archive. The card-container block doesn&rsquo;t expose one.</p>
+        <ul>
+          <li><strong>Fix:</strong> Add ACF fields to the card-container for URL, label, color, and position (top/bottom). Render conditionally in <code>cd-wp-base/blocks/card-container/</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D4</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">No card layout that inlines each post&rsquo;s full content (&ldquo;blog index&rdquo; mode)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Cards always show short summaries. Some sites want a layout that inlines each post&rsquo;s full body content on the listing page &mdash; the classic blog index pattern. No such layout exists.</p>
+        <ul>
+          <li><strong>Fix:</strong> Add a card-container layout option that walks each post&rsquo;s blocks and renders relevant ones inline. Likely needs a helper to filter to article-body blocks (excluding navigation, breadcrumb, etc.).</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D5</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">No toggle to suppress card description text</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Cards always show a description below each card. There&rsquo;s no built-in way to hide it for a tighter, image-focused grid.</p>
+        <ul>
+          <li><strong>Fix:</strong> Add a card-container ACF toggle &ldquo;Hide descriptions.&rdquo; Suppress the summary in <code>cd-wp-base/blocks/card-container/</code> output when set.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D6</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Custom-excerpt builder only walks <code>core/paragraph</code> blocks</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The theme already overrides <code>get_the_excerpt</code> with a block-aware extractor &mdash; but the extractor only looks at paragraph blocks. List items, freeform/Classic content, and text inside nested group blocks are silently skipped.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/templating-functions.php:619&ndash;654</code> (<code>cd_wp_base_custom_excerpt</code>, <code>cd_wp_base_extract_paragraph_blocks</code>).</li>
+          <li><strong>Fix:</strong> Extend the extractor to also pick up <code>core/list</code>, <code>core/list-item</code>, <code>core/freeform</code>, and to recurse through nested group/columns blocks regardless of <code>blockName</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D7</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Accordion blocks default to <code>core/freeform</code> (Classic) and require JS to open/close</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The Accordion block ships with the legacy Classic editor as its default inner content type and uses jQuery to handle expand/collapse. Modern HTML <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> would deliver the same UX with no JS, better accessibility, and better mobile behavior.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/blocks/accordion/accordion.php:5</code> &mdash; default inner block is <code>core/freeform</code>; allowed list is <code>core/freeform</code> + <code>cd/accordion</code>.</li>
+          <li><strong>Fix:</strong> Switch the default and allowed list to standard editorial blocks (<code>core/heading</code>, <code>core/paragraph</code>, <code>core/list</code>, etc.), and let the existing <code>&lt;details class="classic"&gt;</code> markup carry the open/close behavior natively.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D8</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">No native publication-date block (post-date with consistent formatting)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> A small block that shows a post&rsquo;s publication date with consistent formatting and an optional separator would be useful in single-post templates and could replace the inline <code>&lt;p&gt;</code>-as-date pattern that the post-type plugins currently use.</p>
+        <ul>
+          <li><strong>Fix:</strong> Add <code>cd/post-publication-date</code> as a small render-template block. Use a <code>&lt;time datetime&gt;</code> element for semantic correctness.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D9</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">No native taxonomy-terms block to display all of a post&rsquo;s terms as chips</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> A reusable block that renders a row of term-link chips for a post&rsquo;s associated taxonomies (tags, categories, custom) would be a small but generally useful addition.</p>
+        <ul>
+          <li><strong>Fix:</strong> Add <code>cd/post-taxonomy-terms</code> with an ACF option to select which taxonomies to include.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D10</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Block-quote and panel styles only available via the legacy Classic block</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The theme defines &ldquo;Block Quote (offset)&rdquo;, &ldquo;Block Quote (impact)&rdquo;, and a family of &ldquo;Panel&rdquo; styles &mdash; but only inside the TinyMCE Formats dropdown for the Classic block. They&rsquo;re not available as block styles on the modern Paragraph block. Editors who&rsquo;ve moved off Classic lose access.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/editor-functions.php:167&ndash;184</code> (<code>Block Quotes</code>) and <code>:307&ndash;353</code> (<code>Panels</code>).</li>
+          <li><strong>Fix:</strong> Register equivalents as paragraph block styles. For semantic correctness, wrap the rendered <code>&lt;p&gt;</code> in <code>&lt;blockquote&gt;</code> / <code>&lt;div class="panel"&gt;</code> via <code>render_block</code> filters when the corresponding style class is present.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- E · Tech debt & observations -->
+
+    <article class="item" data-scope="base" data-section="E" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">BASE-E1</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title"><code>core/pattern</code> appears in the allowed-blocks list with no documentation</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The theme allows the WordPress core Pattern block in the editor, but doesn&rsquo;t document why or how editors are expected to use it. Worth confirming whether it&rsquo;s intentional or vestigial.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/block-functions.php:81</code></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="E" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">BASE-E2</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">Deactivating an ACF field group cleanly requires both <code>acf_remove_local_field_group()</code> AND a filter on <code>acf/load_field_group</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> ACF stores field groups in two places &mdash; local JSON (read at boot) and the database (read for the admin UI). To fully suppress a group, both sources need to be intercepted. There&rsquo;s no single &ldquo;deactivate this group&rdquo; helper.</p>
+        <ul>
+          <li><strong>Fix:</strong> A small helper (<code>cd_wp_base_deactivate_acf_group($key)</code>) that wires both mechanisms would reduce the risk of a project deactivating only one and being confused by partial behavior. Worth filing upstream with ACF Extended.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="E" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">BASE-E3</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">The number of <code>!important</code> overrides hints at unscoped parent-theme rules</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> A pattern of <code>!important</code> rules in projects built on this theme indicates that the theme&rsquo;s own CSS is using too-broad selectors that downstream code must escalate against. Tightening the theme&rsquo;s rule scoping would let downstream code drop those flags.</p>
+        <ul>
+          <li><strong>Fix:</strong> Audit <code>base.css</code> for body-level and bare-tag selectors (<code>body</code>, <code>h2</code>, <code>input</code>, <code>img</code>) and rescope them to specific structural classes.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="base" data-section="E" data-tags="DEBT" data-primary="DEBT">
+      <div class="item-header">
+        <span class="item-id">BASE-E4</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">Heavy investment in TinyMCE / Classic-block customization vs. modern block styles</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> A large portion of <code>editor-functions.php</code> (TinyMCE button rows, format dropdown, table plugin, paste-transform suppression) is dedicated to making the legacy Classic block work well. The same investment hasn&rsquo;t been made on equivalent modern-block features (paragraph styles, list styles, custom-format buttons).</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-wp-base/functions/editor-functions.php:33&ndash;476</code> (TinyMCE), vs. limited modern-block style registration.</li>
+          <li><strong>Fix:</strong> Decide whether Classic remains a first-class authoring path or a deprecation path, and align the codebase with that decision. If deprecation, pair with BASE-C5 to remove <code>core/freeform</code> from the default allowed list.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- ========================= cd-news ========================= -->
+
+    <article class="item" data-scope="news" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">NEWS-A1</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Imported <code>news_publication_date</code> is stored as <code>Y-m-d</code> instead of ACF&rsquo;s required <code>Ymd</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The plugin imports each news article&rsquo;s publication date and writes it to an ACF date_picker field. ACF&rsquo;s date_picker expects the string <code>20260315</code>, but the import writes <code>2026-03-15</code>. The mismatch means ACF&rsquo;s date formatting and queries don&rsquo;t work correctly downstream.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/functions/cu-news-cron.php:146,164</code> &mdash; <code>$post_date = date('Y-m-d', $timestamp); &hellip; update_field('news_publication_date', $post_date, $post_id);</code></li>
+          <li><strong>Note:</strong> The file does define a <code>cd_news_normalize_date()</code> helper (line 117) that returns <code>Ymd</code>, but it is never actually called.</li>
+          <li><strong>Fix:</strong> Either pass <code>cd_news_normalize_date($date_published)</code> into <code>update_field()</code>, or change the field to display-format <code>Y-m-d</code> in its ACF JSON.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">NEWS-A2</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Imports populate the &ldquo;Page Links To&rdquo; field with the external source URL, redirecting clicks off-site</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> On every import, the plugin sets the &ldquo;Page Links To&rdquo; field (whose job is to redirect a post&rsquo;s permalink elsewhere) to the original external URL. Result: every imported news article&rsquo;s permalink redirects users to the source site instead of showing the locally-imported version.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/functions/cu-news-cron.php:167&ndash;172</code></li>
+          <li><strong>Fix:</strong> Stop populating <code>field_68dd3d5b8b325</code> on import. If a per-import opt-in is desired, gate it behind a setting on the plugin&rsquo;s admin page.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">NEWS-A3</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Single-news template renders the publication date as a non-semantic <code>&lt;p&gt;</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The publication date for a news article is the article&rsquo;s most important piece of metadata, but the template renders it as a generic paragraph. A <code>&lt;time datetime&gt;</code> element (or a heading) would be more semantically meaningful and improves accessibility/SEO.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/templates/blocks/single-news-fields/single-news-fields.php:23</code></li>
+          <li><strong>Fix:</strong> Wrap the date in <code>&lt;time datetime="..."&gt;</code> with an ISO date attribute. Optionally expose an ACF option for the wrapper tag.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">NEWS-A4</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Featured image uses a raw <code>&lt;img&gt;</code> tag instead of <code>the_post_thumbnail()</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The single-news template builds an <code>&lt;img&gt;</code> tag by hand, which means no <code>srcset</code>, no lazy loading, and no <code>alt</code> text. Using WordPress&rsquo;s built-in helper would deliver all three and use the correct registered image size.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/templates/blocks/single-news-fields/single-news-fields.php:30</code></li>
+          <li><strong>Fix:</strong> Replace with <code>the_post_thumbnail('large', ['class' =&gt; 'align-left'])</code>, or pick an appropriate registered size with a <code>sizes</code> attribute.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">NEWS-A5</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Single-news template uses a copy-paste variable name <code>$event_today</code> for the news fallback date</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The variable that holds today&rsquo;s date as a placeholder for unsaved drafts is named <code>$event_today</code> &mdash; clearly copy-pasted from the events plugin. Cosmetic, but a sign that the template was forked rather than refactored.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/templates/blocks/single-news-fields/single-news-fields.php:13,21</code></li>
+          <li><strong>Fix:</strong> Rename to <code>$news_today_fallback</code> (or similar) and consider using <code>wp_date()</code> so the timestamp respects the WordPress timezone instead of the server&rsquo;s.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="B" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">NEWS-B1</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Editor &amp; CSS</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">Featured-image visibility logic treats <code>null</code> as &ldquo;Yes&rdquo;</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The flag controlling whether the featured image renders defaults to &ldquo;show&rdquo; when the field is unset (<code>is_null</code>). It works in practice but is surprising &mdash; an editor reading the JSON wouldn&rsquo;t expect &ldquo;not set&rdquo; to mean &ldquo;yes, show.&rdquo;</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/templates/blocks/single-news-fields/single-news-fields.php:15</code> &mdash; <code>$has_news_image = ($news_featured_image === 'Yes' || is_null($news_featured_image));</code></li>
+          <li><strong>Fix:</strong> Set the ACF field&rsquo;s default value explicitly to <code>'Yes'</code>, then the <code>is_null</code> branch becomes unnecessary.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">NEWS-D1</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Single-news <code>InnerBlocks</code> allowed list is too restrictive (heading / paragraph / buttons only)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The article body inside a single-news block can only contain headings, paragraphs, and buttons. Editors can&rsquo;t add lists, images, embeds, quotes, columns, or any of the other ordinary blocks one would expect inside an article. That makes the plugin unusable for any site with non-trivial article content.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/templates/blocks/single-news-fields/single-news-fields.php:34</code></li>
+          <li><strong>Fix:</strong> Either omit <code>allowedBlocks</code> entirely (defaults to all) or expand to a documented full editorial set: <code>core/heading</code>, <code>core/paragraph</code>, <code>core/list</code>, <code>core/image</code>, <code>core/embed</code>, <code>core/quote</code>, <code>core/buttons</code>, <code>core/columns</code>, <code>core/separator</code>, <code>core/table</code>, <code>core/file</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="E" data-tags="DEBT" data-primary="DEBT">
+      <div class="item-header">
+        <span class="item-id">NEWS-E1</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">Production cron writes success-path messages to the PHP error log</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The import cron logs &ldquo;Successfully imported news: &hellip;&rdquo; to the error log on every successful import. Error logs should be reserved for errors. On a busy site this floods the log with noise that masks real issues.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/functions/cu-news-cron.php:177</code></li>
+          <li><strong>Fix:</strong> Remove or gate behind a <code>WP_DEBUG_LOG</code> check.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="E" data-tags="DEBT" data-primary="DEBT">
+      <div class="item-header">
+        <span class="item-id">NEWS-E2</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">Helper <code>cd_news_normalize_date()</code> defined but never called</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> A helper that would normalize date strings to ACF&rsquo;s <code>Ymd</code> format exists in the file but isn&rsquo;t used anywhere. This is dead code AND the missing call site is the cause of NEWS-A1.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/functions/cu-news-cron.php:117&ndash;121</code></li>
+          <li><strong>Fix:</strong> Either delete the unused function, or wire it into the <code>news_publication_date</code> update (which also resolves NEWS-A1).</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="news" data-section="E" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">NEWS-E3</span>
+        <span class="scope-pill" data-scope="news">cd-news</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">Remote JSON fetched with <code>file_get_contents()</code> &mdash; no timeout, retries, or User-Agent</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The cron pulls remote feeds with PHP&rsquo;s naive <code>file_get_contents()</code>. If the remote endpoint is slow, the cron blocks indefinitely. There&rsquo;s no retry, no User-Agent, no timeout.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/functions/cu-news-cron.php:33,48</code></li>
+          <li><strong>Fix:</strong> Use <code>wp_remote_get()</code> with an explicit timeout (10&ndash;15&nbsp;sec) and proper error handling. Bonus: it goes through WordPress&rsquo;s HTTP API filters.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- ========================= cd-events ========================= -->
+
+    <article class="item" data-scope="events" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">EVENTS-A1</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Single-event template uses <code>esc_html()</code> on URL <code>href</code> attributes (XSS / data-corruption risk)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> When the single-event template builds the &ldquo;Website&rdquo; and &ldquo;Zoom Link&rdquo; output, it passes the URL through <code>esc_html()</code> for the <code>href</code> attribute. <code>esc_html()</code> escapes HTML entities for displaying text &mdash; it doesn&rsquo;t validate URL schemes, so it permits <code>javascript:</code> and other risky schemes that <code>esc_url()</code> would strip. This is the wrong escaper for the role.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/templates/blocks/single-event-fields/single-event-fields.php:106,115,124</code></li>
+          <li><strong>Fix:</strong> Use <code>esc_url($event_website)</code> for the <code>href</code> attribute and <code>esc_html()</code> only for the visible link text. Same applies to the Zoom and email anchors.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">EVENTS-A2</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Imports populate the &ldquo;Page Links To&rdquo; field with the Localist URL</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Same root cause as NEWS-A2: every imported event has its &ldquo;Page Links To&rdquo; redirect set to the source Localist URL, so clicking an event in your local site bounces visitors out to Localist instead of showing the locally-imported page.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/functions/localist-cron.php:201&ndash;206</code></li>
+          <li><strong>Fix:</strong> Stop populating <code>field_68dd3d5b8b325</code> on import. Treat redirect-to-source as opt-in.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">EVENTS-A3</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Single-event template uses raw <code>date('F j, Y')</code> ignoring WordPress&rsquo;s configured timezone</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The fallback &ldquo;today&rsquo;s date&rdquo; placeholder in the editor uses PHP&rsquo;s native <code>date()</code> function, which uses the server timezone &mdash; not the timezone configured in WordPress&rsquo;s admin Settings. Sites whose server timezone differs from their site timezone will see the wrong date.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/templates/blocks/single-event-fields/single-event-fields.php:17</code></li>
+          <li><strong>Fix:</strong> Replace with <code>wp_date(get_option('date_format'))</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">EVENTS-A4</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Card subtitle date format ignores the site&rsquo;s date format setting</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> When an event card&rsquo;s subtitle resolves to the event date, the format is hardcoded to <code>F j, Y</code> (e.g., &ldquo;March 15, 2026&rdquo;). It ignores whatever the site has set in Settings &rarr; General.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/templates/blocks/event-cards/event-cards-functions.php:113</code></li>
+          <li><strong>Fix:</strong> Replace <code>date('F j, Y', $timestamp)</code> with <code>wp_date(get_option('date_format'), $timestamp)</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="C" data-tags="OBSERVATION DEBT" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">EVENTS-C1</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">Imported event meta is saved field-by-field after <code>wp_insert_post()</code> returns</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Each imported event runs <code>update_field()</code> seven times <em>after</em> the post has already been created and <code>wp_insert_post</code> has returned. Code that wants to react to a new event (via <code>save_post</code> or <code>wp_insert_post</code> hooks) can&rsquo;t see the fields yet &mdash; they don&rsquo;t exist when the &ldquo;post created&rdquo; signal fires.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/functions/localist-cron.php:191&ndash;198</code></li>
+          <li><strong>Fix:</strong> Pass meta atomically at insert time using <code>wp_insert_post(['meta_input' =&gt; [...]])</code>, the way the news plugin does for <code>cu_news_id</code>. Reduces hook ordering surprises.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">EVENTS-D1</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">No visual indicator (e.g., calendar icon) distinguishes an event page from any other single-post page</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Event pages look visually identical to news pages and ordinary posts. There&rsquo;s nothing at a glance that signals &ldquo;this is an event with a date and location.&rdquo;</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/templates/blocks/single-event-fields/single-event-fields.php</code></li>
+          <li><strong>Fix:</strong> Add a calendar icon next to the date heading by default; expose an ACF toggle to hide it.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">EVENTS-D2</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Single-event <code>InnerBlocks</code> allowed list is too restrictive (heading / paragraph / buttons only)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Same constraint as NEWS-D1: editors can only place headings, paragraphs, and buttons inside an event&rsquo;s description. Lists, images, embeds, and quotes are blocked.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/templates/blocks/single-event-fields/single-event-fields.php:52</code></li>
+          <li><strong>Fix:</strong> Expand to the documented full editorial set (or omit <code>allowedBlocks</code> to default to all).</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">EVENTS-D3</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title"><code>the_post_thumbnail('full')</code> serves the original-size image &mdash; no responsive variants</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The single-event template renders the featured image at the largest registered size (<code>full</code>), with no <code>sizes</code> attribute. Browsers always download the largest variant, even on mobile.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/templates/blocks/single-event-fields/single-event-fields.php:49</code></li>
+          <li><strong>Fix:</strong> Use a registered intermediate size (e.g., <code>large</code>) with an explicit <code>sizes</code> attribute, or pick by context.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">EVENTS-D4</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Hardcoded English labels in single-event template not run through <code>__()</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The labels &ldquo;Date:&rdquo;, &ldquo;Time:&rdquo;, &ldquo;Location:&rdquo;, &ldquo;Room:&rdquo;, &ldquo;Website:&rdquo;, &ldquo;Zoom Link:&rdquo;, &ldquo;Contact Email:&rdquo;, and &ldquo;Details:&rdquo; are output as plain English literals. They&rsquo;re not localizable and not customizable by the project.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/templates/blocks/single-event-fields/single-event-fields.php:58&ndash;128</code></li>
+          <li><strong>Fix:</strong> Wrap each in <code>__('Date:', 'cd-events')</code>, etc.; consider exposing them as filterable strings.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">EVENTS-D5</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Hardcoded English &ldquo;Events&rdquo; heading in the registered archive template</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The archive template registered for the events post type contains a hardcoded <code>&lt;h1&gt;Events&lt;/h1&gt;</code>. It can&rsquo;t be customized without forking the template, and it&rsquo;s not localizable.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/functions/templating-functions.php:84</code></li>
+          <li><strong>Fix:</strong> Drive the heading from the registered post-type label, or use the <code>cd/title</code> block which already handles archive titles (after BASE-A3 is fixed).</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">EVENTS-D6</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Registered single-event and archive-event templates always use <code>sidebar-left</code> with no flexibility</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The archive and single templates registered by the plugin force a left-sidebar layout. A site that uses no sidebar (or right sidebar) has to fork the template entirely.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/functions/templating-functions.php:53&ndash;98</code> &mdash; <code>field_68a35548a985c</code> hardcoded to <code>sidebar-left</code>.</li>
+          <li><strong>Fix:</strong> Either expose layout choice as a plugin setting, or omit the layout attribute and let the theme&rsquo;s default field handling pick.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="E" data-tags="DEBT" data-primary="DEBT">
+      <div class="item-header">
+        <span class="item-id">EVENTS-E1</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">Production cron writes informational and success-path messages to the PHP error log</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The cron logs &ldquo;Importing N events after filtering,&rdquo; &ldquo;No events URL configured,&rdquo; &ldquo;Successfully imported event,&rdquo; etc. to the error log. Most of these are not errors. They flood the log on busy sites.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/functions/localist-cron.php:37,45,64,69,72,211,215</code></li>
+          <li><strong>Fix:</strong> Remove or gate behind <code>WP_DEBUG_LOG</code>. Admin-visible status reporting belongs on the plugin&rsquo;s admin page, not in the error log.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="events" data-section="E" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">EVENTS-E2</span>
+        <span class="scope-pill" data-scope="events">cd-events</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">Remote JSON fetched with <code>file_get_contents()</code> &mdash; no timeout, retries, or User-Agent</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Same as NEWS-E3 but for the events plugin: <code>file_get_contents()</code> on a remote URL without a timeout means a slow Localist endpoint can stall the cron.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/functions/localist-cron.php:32</code></li>
+          <li><strong>Fix:</strong> Use <code>wp_remote_get()</code> with an explicit timeout.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- ========================= cd-people ========================= -->
+
+    <article class="item" data-scope="people" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-A1</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Single-person preview placeholder emits invalid HTML (<code>&lt;a&gt;&lt;p&gt;&hellip;&lt;/p&gt;&lt;/a&gt;</code> with no <code>href</code>)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> When the editor preview shows a placeholder for the contact section, it emits an anchor tag without an <code>href</code> wrapping a paragraph element. Anchors without <code>href</code> aren&rsquo;t links; the markup also nests a block element inside an inline anchor in a way that some browsers reflow oddly.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/templates/blocks/single-person-fields/single-person-fields.php:68,93</code></li>
+          <li><strong>Fix:</strong> Replace the <code>&lt;a&gt;&lt;p&gt;example@email.com&lt;/p&gt;&lt;/a&gt;</code> with a plain <code>&lt;p&gt;&lt;a href="mailto:example@email.com"&gt;example@email.com&lt;/a&gt;&lt;/p&gt;</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-A2</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Single-person template emits an inline <code>&lt;h1&gt;</code>, risking a duplicate page <code>h1</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The single-person fields block renders the post title as an <code>&lt;h1&gt;</code> inside its own markup. If a project also uses the theme&rsquo;s page-title block (which also emits an <code>&lt;h1&gt;</code>), the page ends up with two top-level headings &mdash; bad for accessibility and SEO.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/templates/blocks/single-person-fields/single-person-fields.php:41</code></li>
+          <li><strong>Fix:</strong> Either omit the in-block heading and let the title block carry the <code>h1</code>, or expose an ACF setting for &ldquo;include heading.&rdquo; The plugin&rsquo;s registered single template (<code>templating-functions.php:53&ndash;70</code>) already includes the <code>cd/title</code> block, so the inline <code>h1</code> is structurally redundant in default usage.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-A3</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Featured-image rendered with raw <code>&lt;img&gt;</code> &mdash; no srcset, no lazy-load, alt is the post title</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The single-person template builds an <code>&lt;img&gt;</code> tag by hand. No <code>srcset</code>, no <code>loading="lazy"</code>, and the <code>alt</code> attribute defaults to the post title (which is a person&rsquo;s name) &mdash; the WCAG-recommended pattern is empty alt for a decorative portrait next to the name.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/templates/blocks/single-person-fields/single-person-fields.php:82</code></li>
+          <li><strong>Fix:</strong> Replace with <code>the_post_thumbnail('large', ['alt' =&gt; ''])</code> or expose an ACF field for custom alt text.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="C" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-C1</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title"><code>cd_person_sync_block_meta()</code> deletes meta whenever the single-person block isn&rsquo;t present in post content</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> On every save, the plugin walks the block tree looking for the single-person-fields block. For any field <em>not</em> found there, it calls <code>delete_post_meta()</code>. This means: importing a person from an external feed (which doesn&rsquo;t put the block in the content) will silently wipe out every meta field the import just wrote. Same risk for any project that wants to manage these fields via custom blocks or REST.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/functions/save-post-meta.php:42&ndash;48</code></li>
+          <li><strong>Fix:</strong> Only sync when the block is actually present (early-return if <code>!has_block('cd/single-person-fields', $post)</code>); or change &ldquo;not found&rdquo; semantics from delete to leave-alone.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="C" data-tags="DEBT" data-primary="DEBT">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-C2</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">Variable-variable assignment (<code>${$field} = get_field($field)</code>) for dynamic field loading</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The template uses PHP&rsquo;s &ldquo;variable variable&rdquo; syntax to populate a dozen named variables from a list of field names. It works, but it&rsquo;s indirection that hides the variable names from static analysis tools (linters, IDE jump-to-definition, autocomplete) and obscures intent.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/templates/blocks/single-person-fields/single-person-fields.php:20&ndash;22</code></li>
+          <li><strong>Fix:</strong> Replace with explicit assignments: <code>$person_last_name = get_field('person_last_name');</code> etc. The verbosity is worth the tooling support.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="C" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-C3</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">No admin/settings page for the plugin (cd-news and cd-events both have one)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Both sibling plugins (<code>cd-news</code>, <code>cd-events</code>) ship an <code>admin/</code> directory with a settings page. <code>cd-people</code> has none. If the plugin ever adds an import path or per-site configuration, this gap will become a dependency.</p>
+        <ul>
+          <li><strong>Where:</strong> compare <code>cd-people/</code> structure with <code>cd-events/admin/cd-events-admin.php</code> and <code>cd-news/admin/cd-news-admin.php</code>.</li>
+          <li><strong>Fix:</strong> Decide whether the parity is worth filling now (e.g., to expose card-display settings) or whether the plugin is intentionally minimal.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-D1</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Single-person <code>InnerBlocks</code> allowed list is too restrictive (heading / paragraph / buttons only)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Same constraint as NEWS-D1 / EVENTS-D2: editors can only place headings, paragraphs, and buttons inside a person&rsquo;s bio. No lists, embeds, images, quotes.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/templates/blocks/single-person-fields/single-person-fields.php:75</code></li>
+          <li><strong>Fix:</strong> Expand to a documented full editorial set, or omit <code>allowedBlocks</code>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-D2</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Hardcoded English labels (&ldquo;Contact&rdquo;, &ldquo;Title&rdquo;, &ldquo;Department&rdquo;) not run through <code>__()</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The labels rendered by the contact-info helper and the placeholder text in preview mode are hardcoded English literals.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/functions/templating-functions.php:138</code> (&ldquo;Contact&rdquo;), <code>single-person-fields.php:51</code> (&ldquo;Title&rdquo;), <code>single-person-fields.php:57</code> (&ldquo;Department&rdquo;).</li>
+          <li><strong>Fix:</strong> Wrap each in <code>__('Contact', 'cd-people')</code>, etc.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="D" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-D3</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">Contact-info helper inlines <code>style="white-space: pre-wrap;"</code> on the address paragraph</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The contact-info renderer mixes inline styling with structural HTML to preserve line breaks in the address. Tiny detail, but inline style attributes bypass the theme&rsquo;s CSS and can&rsquo;t be themed.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/functions/templating-functions.php:151</code></li>
+          <li><strong>Fix:</strong> Add a class (e.g., <code>address-block</code>) and put the rule in a stylesheet, or use <code>nl2br()</code> on the escaped address.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="people" data-section="E" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">PEOPLE-E1</span>
+        <span class="scope-pill" data-scope="people">cd-people</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title"><code>$has_featured_image</code> defaults to true when the field is unset</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Same surprise as NEWS-B1: <code>$has_featured_image = ($person_featured_image === 'Yes' || is_null($person_featured_image));</code> means the absence of a value is treated as &ldquo;Yes.&rdquo;</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-people/templates/blocks/single-person-fields/single-person-fields.php:28</code></li>
+          <li><strong>Fix:</strong> Set the ACF field&rsquo;s default to <code>'Yes'</code> and drop the <code>is_null</code> branch.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- ========================= CROSS-PLUGIN ========================= -->
+
+    <article class="item" data-scope="cross" data-section="A" data-tags="BUG" data-primary="BUG">
+      <div class="item-header">
+        <span class="item-id">CROSS-A1</span>
+        <span class="scope-pill" data-scope="cross">Cross-plugin</span>
+        <span class="section-pill">Bugs</span>
+        <span class="tag BUG">BUG</span>
+        <span class="item-title">Both <code>cd-news</code> and <code>cd-events</code> populate &ldquo;Page Links To&rdquo; on import &mdash; permalinks redirect off-site by default</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> Listed individually as NEWS-A2 and EVENTS-A2, but worth flagging at the cross-plugin level: the &ldquo;import populates Page Links To with the source URL&rdquo; pattern is shared between the two plugins. The unified fix is to stop populating that field on import in both, and route any opt-in redirect-to-source behavior through the same setting.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/functions/cu-news-cron.php:167&ndash;172</code> and <code>cd-events/functions/localist-cron.php:201&ndash;206</code> &mdash; both reference the same field key (<code>field_68dd3d5b8b325</code>).</li>
+          <li><strong>Fix:</strong> Remove the call from both. If a redirect-to-source path is required, consolidate it as a per-plugin admin setting and apply on demand rather than on import.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="cross" data-section="C" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">CROSS-C1</span>
+        <span class="scope-pill" data-scope="cross">Cross-plugin</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">Each plugin registers its own <code>archive-X</code> block template, which collides when the active theme provides one</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> All three plugins register their own archive templates via <code>register_block_template</code>. If the active theme also provides an archive template for the same post type, both register and the result is unpredictable. There&rsquo;s no opt-out filter.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-events/functions/templating-functions.php:42</code>, <code>cd-news/functions/templating-functions.php</code>, <code>cd-people/functions/templating-functions.php:42</code>.</li>
+          <li><strong>Fix:</strong> Each plugin should expose an opt-out filter (e.g., <code>cd_events_register_archive_template</code>, default <code>true</code>), OR check whether the active theme provides one before registering.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="cross" data-section="C" data-tags="OBSERVATION" data-primary="OBSERVATION">
+      <div class="item-header">
+        <span class="item-id">CROSS-C2</span>
+        <span class="scope-pill" data-scope="cross">Cross-plugin</span>
+        <span class="section-pill">Architecture</span>
+        <span class="tag OBSERVATION">OBSERVATION</span>
+        <span class="item-title">Each plugin ships an Archive Settings &ldquo;Cards&rdquo; ACF group that may be unused, polluting the admin page</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> All three plugins register their own ACF field groups against the theme&rsquo;s Archive Settings options page. If a project doesn&rsquo;t use a given plugin&rsquo;s archive cards block, that field group still loads and clutters the Archive Settings page with fields that have no effect.</p>
+        <ul>
+          <li><strong>Where:</strong> Each plugin&rsquo;s <code>custom-fields/*-cards.json</code> field group, registered in the plugin&rsquo;s <code>acf-config.php</code>.</li>
+          <li><strong>Fix:</strong> Gate registration on whether the plugin&rsquo;s cards block is actually used on the site (or expose a per-plugin filter to opt out). Alternatively, register the groups conditionally on the post type being public + visited.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="cross" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">CROSS-D1</span>
+        <span class="scope-pill" data-scope="cross">Cross-plugin</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Single-fields blocks share a too-restrictive <code>InnerBlocks</code> allowlist (heading / paragraph / buttons only)</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> NEWS-D1, EVENTS-D2, and PEOPLE-D1 are the same restriction repeated three times. Worth fixing as a coordinated change across the three plugins so the allowed editorial blocks list is identical and documented in one place.</p>
+        <ul>
+          <li><strong>Fix:</strong> Define a shared list of editorial blocks (likely in the base theme as <code>cd_wp_base_editorial_inner_blocks()</code>), and have each plugin&rsquo;s block reference that list. This also creates a single point of change when the editorial guidelines evolve.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="cross" data-section="E" data-tags="DEBT" data-primary="DEBT">
+      <div class="item-header">
+        <span class="item-id">CROSS-E1</span>
+        <span class="scope-pill" data-scope="cross">Cross-plugin</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">Substantial duplication between <code>cu-news-cron.php</code> and <code>localist-cron.php</code></span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The two cron files duplicate the same logic: schedule an hourly job, fetch a remote JSON, dedupe by ID, filter, loop, <code>wp_insert_post</code>, then <code>wrap_imported_*</code> the content. About 70&ndash;80% of the code is identical. Bug fixes (NEWS-A1, EVENTS-A1, etc.) have to be made twice and can drift.</p>
+        <ul>
+          <li><strong>Where:</strong> <code>cd-news/functions/cu-news-cron.php</code> and <code>cd-events/functions/localist-cron.php</code>.</li>
+          <li><strong>Fix:</strong> Extract a shared importer base (in <code>cd-wp-base</code> or a common library) that handles the boilerplate &mdash; scheduling, dedupe, fetch, retry, error reporting &mdash; and lets each plugin pass in just the per-feed mapping logic.</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="item" data-scope="cross" data-section="E" data-tags="DEBT" data-primary="DEBT">
+      <div class="item-header">
+        <span class="item-id">CROSS-E2</span>
+        <span class="scope-pill" data-scope="cross">Cross-plugin</span>
+        <span class="section-pill">Tech debt</span>
+        <span class="tag DEBT">DEBT</span>
+        <span class="item-title">No coordinated story for &ldquo;import wins&rdquo; vs &ldquo;author edits win&rdquo; on imported posts</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> The three plugins (most directly <code>cd-people</code> via <code>cd_person_sync_block_meta</code>, see PEOPLE-C1) take a stance that the block&rsquo;s data is canonical and any meta not present in the block should be deleted. That&rsquo;s plausible for sync, but combined with imports that bypass the block (cd-news, cd-events) it creates conflicting behaviors. There&rsquo;s no documented contract.</p>
+        <ul>
+          <li><strong>Fix:</strong> Pick one rule (block-is-canonical OR meta-is-canonical) and apply it consistently across the three plugins. Document the trade-off. If both behaviors are needed, expose them as opt-in modes.</li>
+        </ul>
+      </div>
+    </article>
+
+  </div>
+
+  <div class="no-results hidden" id="no-results">No items match the current filters.</div>
+</div>
+
+<script>
+  const TAGS = [
+    { key: 'BUG' },
+    { key: 'IMPROVE' },
+    { key: 'FILTER' },
+    { key: 'DEBT' },
+    { key: 'OBSERVATION' },
+  ];
+  const SECTIONS = [
+    { key: 'A', label: 'A · Bugs' },
+    { key: 'B', label: 'B · Editor & CSS' },
+    { key: 'C', label: 'C · Architecture' },
+    { key: 'D', label: 'D · Missing features' },
+    { key: 'E', label: 'E · Tech debt' },
+  ];
+  const SCOPES = [
+    { key: 'all',    label: 'All' },
+    { key: 'base',   label: 'Base Theme' },
+    { key: 'news',   label: 'cd-news' },
+    { key: 'events', label: 'cd-events' },
+    { key: 'people', label: 'cd-people' },
+    { key: 'cross',  label: 'Cross-plugin' },
+  ];
+
+  let activeScope = 'all';
+  const activeTags = new Set();
+  const activeSections = new Set();
+  let searchQuery = '';
+
+  function makeBtn(label, count, datasetKey, datasetValue, onToggle, isActive) {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset[datasetKey] = datasetValue;
+    btn.innerHTML = label + ' <span class="count-pill">' + count + '</span>';
+    if (isActive) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+      onToggle(btn.classList.contains('active'));
+      applyFilters();
+    });
+    return btn;
+  }
+
+  function makeScopeTab(label, count, scopeKey) {
+    const btn = document.createElement('button');
+    btn.className = 'scope-tab';
+    btn.dataset.scope = scopeKey;
+    btn.innerHTML = label + ' <span class="count-pill">' + count + '</span>';
+    if (scopeKey === activeScope) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      activeScope = scopeKey;
+      document.querySelectorAll('.scope-tab').forEach(b => b.classList.toggle('active', b.dataset.scope === activeScope));
+      applyFilters();
+    });
+    return btn;
+  }
+
+  function renderFilters() {
+    const allItems = document.querySelectorAll('.item');
+
+    const scopeRow = document.getElementById('scope-tabs');
+    SCOPES.forEach(s => {
+      const count = s.key === 'all' ? allItems.length : document.querySelectorAll('.item[data-scope="' + s.key + '"]').length;
+      if (s.key !== 'all' && count === 0) return;
+      scopeRow.appendChild(makeScopeTab(s.label, count, s.key));
+    });
+
+    const tagRow = document.getElementById('tag-filters');
+    TAGS.forEach(t => {
+      const count = document.querySelectorAll('.item[data-tags~="' + t.key + '"]').length;
+      if (count === 0) return;
+      const btn = makeBtn(t.key, count, 'tag', t.key, (on) => {
+        if (on) activeTags.add(t.key); else activeTags.delete(t.key);
+      });
+      tagRow.appendChild(btn);
+    });
+
+    const secRow = document.getElementById('section-filters');
+    SECTIONS.forEach(s => {
+      const count = document.querySelectorAll('.item[data-section="' + s.key + '"]').length;
+      if (count === 0) return;
+      const btn = makeBtn(s.label, count, 'section', s.key, (on) => {
+        if (on) activeSections.add(s.key); else activeSections.delete(s.key);
+      });
+      secRow.appendChild(btn);
+    });
+  }
+
+  function applyFilters() {
+    let visible = 0;
+    const q = searchQuery.trim().toLowerCase();
+    document.querySelectorAll('.item').forEach(item => {
+      const tags = item.dataset.tags.split(/\s+/);
+      const section = item.dataset.section;
+      const scope = item.dataset.scope;
+      const text = item.textContent.toLowerCase();
+      const scopeMatch = activeScope === 'all' || scope === activeScope;
+      const tagMatch = activeTags.size === 0 || tags.some(t => activeTags.has(t));
+      const sectionMatch = activeSections.size === 0 || activeSections.has(section);
+      const searchMatch = !q || text.includes(q);
+      const show = scopeMatch && tagMatch && sectionMatch && searchMatch;
+      item.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+    document.getElementById('visible-count').textContent = visible;
+    document.getElementById('no-results').classList.toggle('hidden', visible > 0);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('total-count').textContent = document.querySelectorAll('.item').length;
+    renderFilters();
+    applyFilters();
+
+    document.getElementById('search').addEventListener('input', e => {
+      searchQuery = e.target.value;
+      applyFilters();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      activeTags.clear();
+      activeSections.clear();
+      activeScope = 'all';
+      searchQuery = '';
+      document.getElementById('search').value = '';
+      document.querySelectorAll('.filter-btn.active').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.scope-tab').forEach(b => b.classList.toggle('active', b.dataset.scope === 'all'));
+      applyFilters();
+    });
+
+    document.getElementById('print-btn').addEventListener('click', () => {
+      window.print();
+    });
+  });
+</script>
+
+</body>
+</html>
