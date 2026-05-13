@@ -1,5 +1,15 @@
 [
   {
+    "itemId": "BASE-C2",
+    "number": 5,
+    "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/5",
+    "title": "[BASE-C2] No first-class concept of “post type → parent page” mapping",
+    "state": "closed",
+    "stateReason": "completed",
+    "assignees": [],
+    "updatedAt": "2026-05-13T18:39:05Z"
+  },
+  {
     "itemId": "BASE-A1",
     "number": 4,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/4",
