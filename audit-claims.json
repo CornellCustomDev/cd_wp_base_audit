@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "itemId": "BASE-A1",
+    "number": 4,
+    "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/4",
+    "title": "[BASE-A1] cd/tabs block crashes on PHP 8 with count(null) TypeError when no t...",
+    "state": "open",
+    "stateReason": null,
+    "assignees": [
+      {
+        "login": "dc774",
+        "avatar_url": "https://avatars.githubusercontent.com/u/20541555?v=4",
+        "html_url": "https://github.com/dc774"
+      }
+    ],
+    "updatedAt": "2026-05-13T16:43:09Z"
+  }
+]
