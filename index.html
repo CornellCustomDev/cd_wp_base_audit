@@ -1115,6 +1115,23 @@
       </div>
     </article>
 
+    <article class="item" data-scope="base" data-section="D" data-tags="IMPROVE" data-primary="IMPROVE">
+      <div class="item-header">
+        <span class="item-id">BASE-D11</span>
+        <span class="scope-pill" data-scope="base">Base Theme</span>
+        <span class="section-pill">Missing features</span>
+        <span class="tag IMPROVE">IMPROVE</span>
+        <span class="item-title">Order (menu_order) field is exposed only on Pages</span>
+      </div>
+      <div class="item-body">
+        <p class="plain"><strong>In plain terms:</strong> WordPress&rsquo;s Order field &mdash; used to manually sequence posts &mdash; appears in Quick Edit and the editor&rsquo;s kebab (&#8942;) menu only on Pages. Every other public post type (news, events, people, custom types, etc.) is missing it, so editors can&rsquo;t hand-order them without an extra plugin or per-site shim.</p>
+        <ul>
+          <li><strong>Fix:</strong> On <code>init</code> (priority 20, after plugin post types register), iterate <code>get_post_types(['public' =&gt; true])</code> and call <code>add_post_type_support($pt, 'page-attributes')</code> for each, skipping <code>attachment</code> and <code>page</code>. This surfaces Order in the list-table Quick Edit row and in the block editor&rsquo;s kebab menu for every public post type by default.</li>
+          <li><strong>Optional polish:</strong> Suppress the &ldquo;Page Attributes&rdquo; sidebar panel for non-hierarchical types so the kebab menu is the sole Edit-screen access point &mdash; <code>wp_add_inline_script('wp-edit-post', ...removeEditorPanel('page-attributes')...)</code> on <code>enqueue_block_editor_assets</code>.</li>
+        </ul>
+      </div>
+    </article>
+
     <!-- E · Tech debt & observations -->
 
     <article class="item" data-scope="base" data-section="E" data-tags="OBSERVATION" data-primary="OBSERVATION">
