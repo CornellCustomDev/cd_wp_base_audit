@@ -320,6 +320,73 @@
     .giscus-thread { margin-top: 1rem; }
     .giscus-thread[hidden] { display: none; }
 
+    .claim-section {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .claim-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .claim-status.in-progress { background: #fff8c5; color: #735c0f; border: 1px solid #eac54f; }
+    .claim-status.complete    { background: #dafbe1; color: #116329; border: 1px solid #4ac26b; }
+    .claim-assignees {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .claim-assignee {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .claim-assignee:hover { text-decoration: underline; }
+    .claim-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .claim-link {
+      font-size: 0.8rem;
+      color: var(--base);
+      text-decoration: none;
+      margin-left: auto;
+    }
+    .claim-link:hover { text-decoration: underline; }
+    .claim-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text);
+      font-family: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .claim-btn:hover { background: var(--bg); border-color: #999; }
+
     @media print {
       .filter-bar { position: static; box-shadow: none; }
       .item { break-inside: avoid; page-break-inside: avoid; box-shadow: none; }
@@ -327,6 +394,7 @@
       body { background: white; }
       .hidden { display: none !important; }
       .comments-section { display: none; }
+      .claim-section { display: none; }
     }
   </style>
 </head>
@@ -342,6 +410,8 @@
     <div class="filter-row" id="tag-filters"></div>
     <h3>Filter by section</h3>
     <div class="filter-row" id="section-filters"></div>
+    <h3>Claim status</h3>
+    <div class="filter-row" id="claim-filters"></div>
     <input type="search" class="search-input" id="search" placeholder="Search titles and details&hellip;" autocomplete="off">
     <div class="stats">
       <span><strong id="visible-count">0</strong> of <span id="total-count">0</span> items shown</span>
@@ -1811,7 +1881,22 @@
   let activeScope = 'all';
   const activeTags = new Set();
   const activeSections = new Set();
+  const activeClaimFilters = new Set();
   let searchQuery = '';
+
+  const REPO_OWNER = 'CornellCustomDev';
+  const REPO_NAME = 'cd_wp_base_audit';
+  const REPO_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME;
+  const PAGES_URL = 'https://cornellcustomdev.github.io/' + REPO_NAME + '/';
+  const CLAIMS_URL = PAGES_URL + 'audit-claims.json';
+
+  const CLAIM_FILTERS = [
+    { key: 'in-progress', label: 'In progress' },
+    { key: 'complete',    label: 'Completed' },
+    { key: 'unclaimed',   label: 'Unclaimed' },
+    { key: 'mine',        label: 'Mine' },
+  ];
+  let claimsByItem = {};
 
   function makeBtn(label, count, datasetKey, datasetValue, onToggle, isActive) {
     const btn = document.createElement('button');
@@ -1884,12 +1969,178 @@
       const tagMatch = activeTags.size === 0 || tags.some(t => activeTags.has(t));
       const sectionMatch = activeSections.size === 0 || activeSections.has(section);
       const searchMatch = !q || text.includes(q);
-      const show = scopeMatch && tagMatch && sectionMatch && searchMatch;
+      let claimMatch = true;
+      if (activeClaimFilters.size > 0) {
+        const claimStatus = item.dataset.claimStatus || 'unclaimed';
+        const isMine = item.dataset.claimMine === '1';
+        claimMatch = Array.from(activeClaimFilters).some(f =>
+          f === 'mine' ? isMine : claimStatus === f
+        );
+      }
+      const show = scopeMatch && tagMatch && sectionMatch && searchMatch && claimMatch;
       item.classList.toggle('hidden', !show);
       if (show) visible++;
     });
     document.getElementById('visible-count').textContent = visible;
     document.getElementById('no-results').classList.toggle('hidden', visible > 0);
+  }
+
+  async function loadClaims() {
+    try {
+      const res = await fetch(CLAIMS_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const claims = await res.json();
+      claimsByItem = {};
+      claims.forEach(c => {
+        (claimsByItem[c.itemId] = claimsByItem[c.itemId] || []).push(c);
+      });
+    } catch (e) {
+      console.warn('Could not load audit-claims.json:', e);
+      claimsByItem = {};
+    }
+  }
+
+  function classifyClaim(c) {
+    if (c.state === 'closed' && c.stateReason === 'not_planned') return 'removed';
+    if (c.state === 'closed') return 'complete';
+    return 'in-progress';
+  }
+
+  function getLiveClaims(itemId) {
+    return (claimsByItem[itemId] || [])
+      .map(c => Object.assign({}, c, { status: classifyClaim(c) }))
+      .filter(c => c.status !== 'removed')
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  }
+
+  function recomputeMine() {
+    const me = (localStorage.getItem('audit-username') || '').toLowerCase();
+    document.querySelectorAll('.item').forEach(item => {
+      if (!item.id) return;
+      const live = getLiveClaims(item.id);
+      item.dataset.claimMine = me && live.some(c =>
+        c.assignees.some(a => a.login.toLowerCase() === me)
+      ) ? '1' : '';
+    });
+  }
+
+  function buildClaimUrl(itemId, cleanTitle) {
+    const truncated = cleanTitle.length > 70 ? cleanTitle.slice(0, 67) + '...' : cleanTitle;
+    const issueTitle = '[' + itemId + '] ' + truncated;
+    const issueBody = 'Claiming **' + itemId + '**.\n\nAudit item: ' + PAGES_URL + '#' + itemId;
+    const params = new URLSearchParams({
+      template: 'audit-claim.md',
+      title: issueTitle,
+      body: issueBody,
+    });
+    return REPO_URL + '/issues/new?' + params.toString();
+  }
+
+  function attachClaims() {
+    const me = (localStorage.getItem('audit-username') || '').toLowerCase();
+    document.querySelectorAll('.item').forEach(item => {
+      const idEl = item.querySelector('.item-id');
+      const body = item.querySelector('.item-body');
+      if (!idEl || !body) return;
+      const id = idEl.textContent.trim();
+      item.id = id;
+
+      const titleEl = item.querySelector('.item-title');
+      const cleanTitle = (titleEl ? titleEl.textContent : '').trim().replace(/\s+/g, ' ');
+
+      const live = getLiveClaims(id);
+      item.dataset.claimStatus = live.length === 0
+        ? 'unclaimed'
+        : (live.some(c => c.status === 'in-progress') ? 'in-progress' : 'complete');
+      item.dataset.claimMine = me && live.some(c =>
+        c.assignees.some(a => a.login.toLowerCase() === me)
+      ) ? '1' : '';
+
+      const section = document.createElement('div');
+      section.className = 'claim-section';
+
+      if (live.length > 0) {
+        const primary = live[0];
+
+        const pill = document.createElement('span');
+        pill.className = 'claim-status ' + primary.status;
+        pill.textContent = primary.status === 'in-progress' ? 'In Progress' : 'Complete';
+        section.appendChild(pill);
+
+        const assignees = document.createElement('span');
+        assignees.className = 'claim-assignees';
+        primary.assignees.forEach(a => {
+          const link = document.createElement('a');
+          link.href = a.html_url;
+          link.target = '_blank';
+          link.rel = 'noopener';
+          link.className = 'claim-assignee';
+          link.title = '@' + a.login;
+          const img = document.createElement('img');
+          img.src = a.avatar_url;
+          img.alt = '';
+          img.className = 'claim-avatar';
+          link.appendChild(img);
+          const nm = document.createElement('span');
+          nm.textContent = a.login;
+          link.appendChild(nm);
+          assignees.appendChild(link);
+        });
+        section.appendChild(assignees);
+
+        const editLink = document.createElement('a');
+        editLink.href = primary.url;
+        editLink.target = '_blank';
+        editLink.rel = 'noopener';
+        editLink.className = 'claim-link';
+        editLink.textContent = 'Edit on GitHub → #' + primary.number;
+        section.appendChild(editLink);
+      } else {
+        const btn = document.createElement('a');
+        btn.className = 'claim-btn';
+        btn.target = '_blank';
+        btn.rel = 'noopener';
+        btn.href = buildClaimUrl(id, cleanTitle);
+        btn.innerHTML = '🙋 Assign to me';
+        section.appendChild(btn);
+      }
+
+      body.appendChild(section);
+    });
+  }
+
+  function renderClaimFilters() {
+    const row = document.getElementById('claim-filters');
+    row.innerHTML = '';
+    const me = (localStorage.getItem('audit-username') || '').toLowerCase();
+    CLAIM_FILTERS.forEach(f => {
+      let count;
+      if (f.key === 'mine') {
+        count = me ? document.querySelectorAll('.item[data-claim-mine="1"]').length : 0;
+      } else {
+        count = document.querySelectorAll('.item[data-claim-status="' + f.key + '"]').length;
+      }
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.claim = f.key;
+      const labelExtra = f.key === 'mine' && !me ? ' …' : '';
+      btn.innerHTML = f.label + labelExtra + ' <span class="count-pill">' + count + '</span>';
+      if (activeClaimFilters.has(f.key)) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        if (f.key === 'mine' && !localStorage.getItem('audit-username')) {
+          const entered = prompt('Your GitHub username (used to filter to your claims):');
+          if (!entered || !entered.trim()) return;
+          localStorage.setItem('audit-username', entered.trim().toLowerCase());
+          recomputeMine();
+          renderClaimFilters();
+        }
+        const isActive = btn.classList.toggle('active');
+        if (isActive) activeClaimFilters.add(f.key);
+        else activeClaimFilters.delete(f.key);
+        applyFilters();
+      });
+      row.appendChild(btn);
+    });
   }
 
   const GISCUS = {
@@ -1953,11 +2204,19 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('total-count').textContent = document.querySelectorAll('.item').length;
     renderFilters();
+    await loadClaims();
+    attachClaims();
+    renderClaimFilters();
     applyFilters();
     attachComments();
+
+    if (location.hash) {
+      const target = document.getElementById(location.hash.slice(1));
+      if (target) target.scrollIntoView();
+    }
 
     document.getElementById('search').addEventListener('input', e => {
       searchQuery = e.target.value;
@@ -1967,6 +2226,7 @@
     document.getElementById('reset-btn').addEventListener('click', () => {
       activeTags.clear();
       activeSections.clear();
+      activeClaimFilters.clear();
       activeScope = 'all';
       searchQuery = '';
       document.getElementById('search').value = '';
