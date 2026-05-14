@@ -1,5 +1,21 @@
 [
   {
+    "itemId": "BASE-B8",
+    "number": 12,
+    "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/12",
+    "title": "[BASE-B8] Full-bleed and no-sidebar templates appear constrained in the edito...",
+    "state": "closed",
+    "stateReason": "completed",
+    "assignees": [
+      {
+        "login": "dc774",
+        "avatar_url": "https://avatars.githubusercontent.com/u/20541555?v=4",
+        "html_url": "https://github.com/dc774"
+      }
+    ],
+    "updatedAt": "2026-05-14T17:14:38Z"
+  },
+  {
     "itemId": "BASE-B5",
     "number": 11,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/11",
