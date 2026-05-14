@@ -1,5 +1,15 @@
 [
   {
+    "itemId": "BASE-D1",
+    "number": 8,
+    "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/8",
+    "title": "[BASE-D1] Banner images use wp_get_attachment_image_url() with size large — n...",
+    "state": "open",
+    "stateReason": null,
+    "assignees": [],
+    "updatedAt": "2026-05-14T16:38:23Z"
+  },
+  {
     "itemId": "BASE-A6",
     "number": 7,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/7",
