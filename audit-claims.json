@@ -6,8 +6,14 @@
     "title": "[BASE-D1] Banner images use wp_get_attachment_image_url() with size large — n...",
     "state": "open",
     "stateReason": null,
-    "assignees": [],
-    "updatedAt": "2026-05-14T16:38:23Z"
+    "assignees": [
+      {
+        "login": "dc774",
+        "avatar_url": "https://avatars.githubusercontent.com/u/20541555?v=4",
+        "html_url": "https://github.com/dc774"
+      }
+    ],
+    "updatedAt": "2026-05-14T16:38:48Z"
   },
   {
     "itemId": "BASE-A6",
@@ -30,8 +36,8 @@
     "number": 6,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/6",
     "title": "[BASE-A5] Sidebar block templates ship “Mussum Ipsum” lorem text by default",
-    "state": "closed",
-    "stateReason": "completed",
+    "state": "open",
+    "stateReason": "reopened",
     "assignees": [
       {
         "login": "dc774",
@@ -39,7 +45,7 @@
         "html_url": "https://github.com/dc774"
       }
     ],
-    "updatedAt": "2026-05-13T18:40:09Z"
+    "updatedAt": "2026-05-14T16:45:13Z"
   },
   {
     "itemId": "BASE-C2",
