@@ -6,8 +6,14 @@
     "title": "[BASE-B9] Core separator block styles override theme HR styles like accent1",
     "state": "open",
     "stateReason": null,
-    "assignees": [],
-    "updatedAt": "2026-05-14T16:58:18Z"
+    "assignees": [
+      {
+        "login": "dc774",
+        "avatar_url": "https://avatars.githubusercontent.com/u/20541555?v=4",
+        "html_url": "https://github.com/dc774"
+      }
+    ],
+    "updatedAt": "2026-05-14T16:58:44Z"
   },
   {
     "itemId": "BASE-D1",
@@ -46,8 +52,8 @@
     "number": 6,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/6",
     "title": "[BASE-A5] Sidebar block templates ship “Mussum Ipsum” lorem text by default",
-    "state": "open",
-    "stateReason": "reopened",
+    "state": "closed",
+    "stateReason": "not_planned",
     "assignees": [
       {
         "login": "dc774",
@@ -55,7 +61,7 @@
         "html_url": "https://github.com/dc774"
       }
     ],
-    "updatedAt": "2026-05-14T16:49:44Z"
+    "updatedAt": "2026-05-14T16:59:36Z"
   },
   {
     "itemId": "BASE-C2",
