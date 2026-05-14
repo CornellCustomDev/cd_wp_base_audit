@@ -1,5 +1,15 @@
 [
   {
+    "itemId": "BASE-B9",
+    "number": 9,
+    "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/9",
+    "title": "[BASE-B9] Core separator block styles override theme HR styles like accent1",
+    "state": "open",
+    "stateReason": null,
+    "assignees": [],
+    "updatedAt": "2026-05-14T16:58:18Z"
+  },
+  {
     "itemId": "BASE-D1",
     "number": 8,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/8",
