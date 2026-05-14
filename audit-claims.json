@@ -1,5 +1,15 @@
 [
   {
+    "itemId": "BASE-B4",
+    "number": 10,
+    "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/10",
+    "title": "[BASE-B4] Aside block’s editor wrapper uses display: contents, neutralizing f...",
+    "state": "closed",
+    "stateReason": "completed",
+    "assignees": [],
+    "updatedAt": "2026-05-14T17:08:43Z"
+  },
+  {
     "itemId": "BASE-B9",
     "number": 9,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/9",
