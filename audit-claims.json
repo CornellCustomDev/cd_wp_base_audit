@@ -52,8 +52,8 @@
     "number": 6,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/6",
     "title": "[BASE-A5] Sidebar block templates ship “Mussum Ipsum” lorem text by default",
-    "state": "closed",
-    "stateReason": "not_planned",
+    "state": "open",
+    "stateReason": "reopened",
     "assignees": [
       {
         "login": "dc774",
@@ -61,7 +61,7 @@
         "html_url": "https://github.com/dc774"
       }
     ],
-    "updatedAt": "2026-05-14T16:59:36Z"
+    "updatedAt": "2026-05-14T17:00:30Z"
   },
   {
     "itemId": "BASE-C2",
