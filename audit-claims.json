@@ -1,13 +1,35 @@
 [
   {
+    "itemId": "BASE-B5",
+    "number": 11,
+    "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/11",
+    "title": "[BASE-B5] core/spacer height collapses (or balloons) inside the editor in Sho...",
+    "state": "closed",
+    "stateReason": "completed",
+    "assignees": [
+      {
+        "login": "dc774",
+        "avatar_url": "https://avatars.githubusercontent.com/u/20541555?v=4",
+        "html_url": "https://github.com/dc774"
+      }
+    ],
+    "updatedAt": "2026-05-14T17:12:31Z"
+  },
+  {
     "itemId": "BASE-B4",
     "number": 10,
     "url": "https://github.com/CornellCustomDev/cd_wp_base_audit/issues/10",
     "title": "[BASE-B4] Aside block’s editor wrapper uses display: contents, neutralizing f...",
     "state": "closed",
-    "stateReason": "completed",
-    "assignees": [],
-    "updatedAt": "2026-05-14T17:08:43Z"
+    "stateReason": "not_planned",
+    "assignees": [
+      {
+        "login": "dc774",
+        "avatar_url": "https://avatars.githubusercontent.com/u/20541555?v=4",
+        "html_url": "https://github.com/dc774"
+      }
+    ],
+    "updatedAt": "2026-05-14T17:09:04Z"
   },
   {
     "itemId": "BASE-B9",
